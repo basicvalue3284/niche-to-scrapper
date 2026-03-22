@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Niche To Scrapper</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        body.dark-mode { background: #1a1a1a; color: #e0e0e0; }
+        .wrapper { display: flex; height: 100vh; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 260px; background: #f5f5f5; border-right: 1px solid #ddd; overflow-y: auto; display: flex; flex-direction: column; transition: width 0.3s ease; }
+        body.dark-mode .sidebar { background: #2a2a2a; border-right-color: #444; }
+        .sidebar.collapsed { width: 70px; }
+        
+        .sidebar-header { padding: 20px 16px; border-bottom: 1px solid #ddd; background: white; }
+        body.dark-mode .sidebar-header { background: #2a2a2a; border-bottom-color: #444; }
+        .sidebar-header h3 { font-size: 11px; font-weight: 600; color: #1a1a1a; text-transform: uppercase; letter-spacing: 0.5px; }
+        body.dark-mode .sidebar-header h3 { color: #e0e0e0; }
+        .sidebar.collapsed .sidebar-header h3 { display: none; }
+        
+        .sidebar-content { flex: 1; padding: 0; }
+        .step-item { padding: 12px 14px; border-left: 3px solid transparent; cursor: pointer; transition: all 0.2s; background: white; display: flex; justify-content: space-between; align-items: center; }
+        body.dark-mode .step-item { background: #2a2a2a; }
+        .step-item:hover { background: #f9f9f9; border-left-color: #2196f3; padding-left: 11px; }
+        body.dark-mode .step-item:hover { background: #333; }
+        .step-item.active { background: white; border-left: 3px solid #2196f3; padding-left: 11px; box-shadow: inset 0 0 0 1px #e3f2fd; }
+        body.dark-mode .step-item.active { background: #333; box-shadow: inset 0 0 0 1px #1e3a5f; }
+        
+        .step-name { font-size: 11px; font-weight: 500; color: #1a1a1a; }
+        body.dark-mode .step-name { color: #e0e0e0; }
+        .step-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #e8e8e8; color: #666; font-weight: 500; }
+        body.dark-mode .step-status { background: #444; color: #aaa; }
+        .step-item.active .step-status { background: #c8e6c9; color: #2e7d32; }
+        .sidebar.collapsed .step-name { display: none; }
+        
+        /* MAIN CONTENT */
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+        .header { background: white; padding: 14px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        body.dark-mode .header { background: #2a2a2a; border-bottom-color: #444; }
+        .header h1 { font-size: 18px; font-weight: 600; color: #1a1a1a; margin: 0; }
+        body.dark-mode .header h1 { color: #e0e0e0; }
+        
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-right { display: flex; gap: 8px; align-items: center; }
+        .header-btn { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+        body.dark-mode .header-btn { background: #333; border-color: #555; color: #e0e0e0; }
+        .header-btn:hover { border-color: #2196f3; }
+        
+        .content-area { flex: 1; overflow-y: auto; background: white; }
+        body.dark-mode .content-area { background: #1a1a1a; }
+        .step-content { display: none; padding: 0; }
+        .step-content.active { display: block; }
+        
+        /* UPLOAD SECTION */
+        .upload-section { padding: 20px; display: none; }
+        .upload-section.active { display: block; }
+        .upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; margin-bottom: 16px; transition: all 0.2s; }
+        body.dark-mode .upload-area { border-color: #555; }
+        .upload-area:hover { border-color: #2196f3; background: #f0f7ff; }
+        body.dark-mode .upload-area:hover { background: #1e3a5f; }
+        .upload-title { font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 4px; }
+        body.dark-mode .upload-title { color: #e0e0e0; }
+        #fileInput { display: none; }
+        
+        .manual-input-area { margin-bottom: 16px; }
+        .manual-input-area label { display: block; font-size: 11px; font-weight: 500; color: #666; margin-bottom: 6px; }
+        body.dark-mode .manual-input-area label { color: #aaa; }
+        .manual-input-area textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 11px; font-family: monospace; min-height: 80px; resize: vertical; background: white; color: #333; }
+        body.dark-mode .manual-input-area textarea { background: #333; border-color: #555; color: #e0e0e0; }
+        
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        button { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; background: white; color: #1a1a1a; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        body.dark-mode button { background: #333; border-color: #555; color: #e0e0e0; }
+        button.primary { background: #2196f3; color: white; border-color: #2196f3; }
+        button.primary:hover:not(:disabled) { background: #1976d2; }
+        button:hover:not(:disabled) { border-color: #2196f3; background: #f0f7ff; }
+        body.dark-mode button:hover:not(:disabled) { background: #1e3a5f; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* TOP BAR */
+        .sticky-top { position: sticky; top: 0; background: white; border-bottom: 1px solid #ddd; z-index: 100; padding: 10px 20px; }
+        body.dark-mode .sticky-top { background: #2a2a2a; border-bottom-color: #444; }
+        .top-bar { display: flex; gap: 10px; align-items: center; font-size: 11px; flex-wrap: wrap; }
+        .top-bar-item { display: flex; align-items: center; gap: 6px; }
+        .top-bar input { padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; min-width: 130px; background: white; color: #333; }
+        body.dark-mode .top-bar input { background: #333; border-color: #555; color: #e0e0e0; }
+        .count-display { color: #666; font-weight: 500; white-space: nowrap; }
+        body.dark-mode .count-display { color: #aaa; }
+        .file-name { color: #1a1a1a; font-weight: 500; }
+        body.dark-mode .file-name { color: #e0e0e0; }
+        
+        /* PREVIEW CONTROLS */
+        .preview-controls { padding: 12px 20px; border-bottom: 1px solid #ddd; }
+        body.dark-mode .preview-controls { border-bottom-color: #444; }
+        
+        .filter-buttons { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .filter-btn { padding: 5px 10px; border: 1px solid #ddd; border-radius: 20px; background: white; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        body.dark-mode .filter-btn { background: #333; border-color: #555; color: #e0e0e0; }
+        .filter-btn:hover { border-color: #2196f3; }
+        .filter-btn.active { background: #2196f3; color: white; border-color: #2196f3; }
+        
+        .controls-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .controls-row label { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; cursor: pointer; color: #333; }
+        body.dark-mode .controls-row label { color: #e0e0e0; }
+        .controls-row input[type="checkbox"] { cursor: pointer; width: 14px; height: 14px; }
+        
+        .filter-menu { position: relative; display: inline-block; }
+        .filter-menu-content { display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 200; min-width: 150px; right: 0; top: 100%; }
+        body.dark-mode .filter-menu-content { background: #333; border-color: #555; }
+        .filter-menu-content.active { display: block; }
+        .filter-menu-content button { display: block; width: 100%; text-align: left; padding: 6px 10px; border: none; background: white; cursor: pointer; font-size: 11px; margin: 0; }
+        body.dark-mode .filter-menu-content button { background: #333; color: #e0e0e0; }
+        .filter-menu-content button:hover { background: #f0f7ff; }
+        body.dark-mode .filter-menu-content button:hover { background: #444; }
+        
+        .send-extract-btn { float: right; margin-bottom: 10px; }
+        
+        /* TABLE */
+        .table-wrapper { overflow: auto; border: 1px solid #ddd; border-radius: 6px; margin: 0 20px 10px 20px; max-height: 65vh; }
+        body.dark-mode .table-wrapper { border-color: #444; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #f8f9fa; padding: 8px 10px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 500; color: #666; position: sticky; top: 0; user-select: none; }
+        body.dark-mode th { background: #333; border-bottom-color: #555; color: #aaa; }
+        th:hover { cursor: col-resize; background: #f0f0f0; }
+        body.dark-mode th:hover { background: #444; }
+        body.dark-mode th { background: #333; border-bottom-color: #555; color: #aaa; }
+        td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; color: #333; }
+        body.dark-mode td { border-bottom-color: #444; color: #e0e0e0; }
+        tr:hover { background: #f8f9fa; }
+        body.dark-mode tr:hover { background: #333; }
+        tr.duplicate { background: #fff3e0; }
+        body.dark-mode tr.duplicate { background: #3a2e1f; }
+        
+        .badge { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 500; }
+        .badge.how-to { background: #f8bbd0; color: #c2185b; }
+        .badge.how-to-start { background: #c8e6c9; color: #2e7d32; }
+        .badge.how-to-board { background: #bbdefb; color: #1565c0; }
+        .badge.shorts { background: #ffe0b2; color: #e65100; }
+        .badge.non-how-to { background: #d1c4e9; color: #512da8; }
+        .badge.vs { background: #b2dfdb; color: #004d40; }
+        .badge.review { background: #ffccbc; color: #bf360c; }
+        .badge.listicles { background: #f0f4c3; color: #827717; }
+        
+        .action-btns { display: flex; gap: 3px; }
+        .action-btns button { padding: 3px 5px; font-size: 10px; margin: 0; }
+        .count-info { font-size: 11px; color: #666; margin: 6px 20px 0 20px; }
+        body.dark-mode .count-info { color: #aaa; }
+        
+        /* STATUS MESSAGE */
+        .status-message { padding: 10px; border-radius: 6px; font-size: 11px; margin: 10px 20px; animation: fadeIn 0.3s ease; }
+        .status-message.success { background: #c8e6c9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .status-message.error { background: #ffccbc; color: #bf360c; border: 1px solid #ffab91; }
+        body.dark-mode .status-message.success { background: #1e4620; color: #81c784; }
+        body.dark-mode .status-message.error { background: #4e2a1f; color: #e57373; }
+        
+        .empty-state { text-align: center; padding: 30px 16px; color: #999; }
+        body.dark-mode .empty-state { color: #666; }
+        .empty-state p { font-size: 12px; }
+        
+        h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; margin-top: 16px; color: #1a1a1a; }
+        body.dark-mode h2 { color: #e0e0e0; }
+        
+        /* SETTINGS */
+        .settings-panel { position: fixed; top: 0; right: 0; width: 380px; height: 100vh; background: white; box-shadow: -2px 0 8px rgba(0,0,0,0.15); overflow-y: auto; z-index: 1000; display: none; }
+        body.dark-mode .settings-panel { background: #2a2a2a; }
+        .settings-panel.active { display: block; animation: slideIn 0.3s ease; }
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 999; display: none; }
+        .overlay.active { display: block; }
+        
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .settings-header { padding: 16px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+        body.dark-mode .settings-header { border-bottom-color: #555; }
+        .settings-header h2 { margin: 0; }
+        .settings-content { padding: 16px; }
+        .settings-section { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #ddd; }
+        body.dark-mode .settings-section { border-bottom-color: #555; }
+        .settings-section h3 { font-size: 11px; font-weight: 600; color: #333; margin-bottom: 10px; text-transform: uppercase; }
+        body.dark-mode .settings-section h3 { color: #aaa; }
+        
+        .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
+        .form-group label { font-size: 11px; font-weight: 500; color: #666; margin-bottom: 4px; }
+        body.dark-mode .form-group label { color: #aaa; }
+        .form-group input, .form-group select, .form-group textarea { padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; font-family: inherit; background: white; color: #333; }
+        body.dark-mode .form-group input, body.dark-mode .form-group select, body.dark-mode .form-group textarea { background: #333; border-color: #555; color: #e0e0e0; }
+        .form-group textarea { min-height: 60px; resize: vertical; }
+        
+        .slider-group { margin-bottom: 12px; }
+        .slider-group label { font-size: 11px; font-weight: 500; color: #666; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        body.dark-mode .slider-group label { color: #aaa; }
+        .slider-group input[type="range"] { width: 100%; }
+        
+        .tag-dropdown { position: absolute; background: white; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 300; min-width: 130px; }
+        body.dark-mode .tag-dropdown { background: #333; border-color: #555; }
+        .tag-dropdown button { display: block; width: 100%; text-align: left; padding: 6px 10px; border: none; background: white; cursor: pointer; font-size: 11px; margin: 0; }
+        body.dark-mode .tag-dropdown button { background: #333; color: #e0e0e0; }
+        .tag-dropdown button:hover { background: #f0f7ff; }
+        body.dark-mode .tag-dropdown button:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- SIDEBAR -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header"><h3>STEPS</h3></div>
+            <div class="sidebar-content">
+                <div class="step-item active" onclick="switchStep(0)">
+                    <div style="flex:1;">
+                        <div class="step-name">📤 Upload & Preview</div>
+                    </div>
+                    <span class="step-status">Ready</span>
+                </div>
+                <div class="step-item" onclick="switchStep(1)">
+                    <div style="flex:1;">
+                        <div class="step-name">✨ Extract & Policy</div>
+                    </div>
+                    <span class="step-status" id="s1">Pending</span>
+                </div>
+                <div class="step-item" onclick="switchStep(2)">
+                    <div style="flex:1;">
+                        <div class="step-name">📥 Export</div>
+                    </div>
+                    <span class="step-status" id="s2">Pending</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="header">
+                <div class="header-left">
+                    <button class="header-btn" onclick="toggleSidebar()" style="border: none; background: none; padding: 0; font-size: 16px;">☰</button>
+                    <h1>Niche To Scrapper</h1>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" onclick="toggleDarkMode()" id="themeBtn" style="border: none; background: none; padding: 0; font-size: 16px;">☀️</button>
+                    <button class="header-btn" onclick="openSettings()">⚙️</button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- STEP 0: UPLOAD & PREVIEW -->
+                <div class="step-content active" id="c0">
+                    <!-- UPLOAD SECTION -->
+                    <div class="upload-section active" id="uploadSection">
+                        <h2>Step 1: Upload CSV or Paste Titles</h2>
+                        
+                        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                            <p class="upload-title">📤 Drop CSV file here</p>
+                            <p style="font-size: 11px; color: #999;">or click to browse</p>
+                        </div>
+                        <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)">
+
+                        <div class="manual-input-area">
+                            <label>Or paste titles (one per line):</label>
+                            <textarea id="manualTitles" placeholder="Title 1&#10;Title 2&#10;Title 3"></textarea>
+                            <div class="button-group" style="margin-top: 6px;">
+                                <button class="primary" onclick="handleManualInput()">✅ Add Titles</button>
+                                <button onclick="document.getElementById('manualTitles').value=''">🗑️ Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PREVIEW SECTION -->
+                    <div id="previewSection" style="display:none;">
+                        <!-- STICKY TOP BAR -->
+                        <div class="sticky-top" id="topBar">
+                            <div class="top-bar">
+                                <span class="file-name" id="fileNameDisplay">📄 No file</span>
+                                <input type="text" id="searchBox" placeholder="🔍 Search..." onkeyup="searchTitles()">
+                                <div class="count-display">Total: <span id="totalCount">0</span> | Final: <span id="finalListCount">0</span></div>
+                            </div>
+                        </div>
+
+                        <!-- PREVIEW CONTROLS -->
+                        <div class="preview-controls" id="previewControls">
+                            <div class="filter-buttons" id="filterButtons"></div>
+                            
+                            <div class="controls-row">
+                                <label>
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                    Select All
+                                </label>
+                                <div class="filter-menu">
+                                    <button onclick="toggleFilterMenu()" style="padding: 5px 10px;">☰ Filter</button>
+                                    <div class="filter-menu-content" id="filterMenuContent"></div>
+                                </div>
+                            </div>
+
+                            <button class="primary send-extract-btn" id="sendExtractBtn" onclick="sendToExtract()" style="display:none;">Send to Extract & Policy</button>
+                            <div style="clear: both;"></div>
+
+                            <!-- TABLE -->
+                            <div class="table-wrapper">
+                                <table id="previewTable"></table>
+                            </div>
+                            <div class="count-info" id="countInfo"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 1: EXTRACT & POLICY -->
+                <div class="step-content" id="c1" style="padding: 20px;">
+                    <h2>Step 2: Extract & Policy Check</h2>
+                    
+                    <!-- STATS DASHBOARD - CLICKABLE -->
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+                        <div style="background:#f8f9fa;border:2px solid #ddd;border-radius:6px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;" class="stat-card" id="statTotalCard" onclick="filterExtraction('all')">
+                            <div style="font-size:10px;color:#666;text-transform:uppercase;margin-bottom:8px;font-weight:600;">Total</div>
+                            <div style="font-size:28px;font-weight:700;color:#2196f3;" id="statTotal">0</div>
+                        </div>
+                        <div style="background:#f8f9fa;border:2px solid #ddd;border-radius:6px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;" class="stat-card" id="statSafeCard" onclick="filterExtraction('safe')">
+                            <div style="font-size:10px;color:#666;text-transform:uppercase;margin-bottom:8px;font-weight:600;">Safe</div>
+                            <div style="font-size:28px;font-weight:700;color:#4caf50;" id="statSafe">0</div>
+                        </div>
+                        <div style="background:#f8f9fa;border:2px solid #ddd;border-radius:6px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;" class="stat-card" id="statRiskyCard" onclick="filterExtraction('risky')">
+                            <div style="font-size:10px;color:#666;text-transform:uppercase;margin-bottom:8px;font-weight:600;">Risky</div>
+                            <div style="font-size:28px;font-weight:700;color:#ff9800;" id="statRisky">0</div>
+                        </div>
+                        <div style="background:#f8f9fa;border:2px solid #ddd;border-radius:6px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;" class="stat-card" id="statProhibitedCard" onclick="filterExtraction('prohibited')">
+                            <div style="font-size:10px;color:#666;text-transform:uppercase;margin-bottom:8px;font-weight:600;">Prohibited</div>
+                            <div style="font-size:28px;font-weight:700;color:#f44336;" id="statProhibited">0</div>
+                        </div>
+                    </div>
+
+                    <!-- PROCESS & DOWNLOAD BUTTONS -->
+                    <div style="margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="primary" id="processBtn" onclick="startProcessing()" disabled>🚀 Start Title extraction & Policy Checker</button>
+                        <button onclick="downloadMasterSheet()" style="float:right;">📥 Download Master Sheet</button>
+                    </div>
+                    
+                    <div id="processContent" style="margin-top: 12px;">
+                        <div class="empty-state"><p>Titles from Final List will appear here</p></div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: EXPORT -->
+                <div class="step-content" id="c2" style="padding: 20px;">
+                    <h2>Step 3: Export Ready Titles</h2>
+                    <p style="font-size:12px;color:#666;margin-bottom:16px;">By default, only <strong>SAFE titles</strong> are ready for download. These are titles that passed policy check and are ready to scrape.</p>
+                    
+                    <div id="exportContent">
+                        <div class="empty-state"><p>Export options will appear after processing</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS OVERLAY & PANEL -->
+    <div class="overlay" id="overlay" onclick="closeSettings()"></div>
+    <div class="settings-panel" id="settings">
+        <div class="settings-header">
+            <h2>Settings</h2>
+            <button style="background: none; border: none; font-size: 18px; cursor: pointer;" onclick="closeSettings()">✕</button>
+        </div>
+        <div class="settings-content">
+            <div class="settings-section">
+                <h3>Display</h3>
+                <div class="slider-group">
+                    <label>Row Height: <span id="rowHeightVal">8px</span></label>
+                    <input type="range" id="rowHeightSlider" min="6" max="16" value="8" onchange="updateRowHeight()" style="width: 100%;">
+                </div>
+                <div class="slider-group">
+                    <label>UI Zoom: <span id="zoomVal">100%</span></label>
+                    <input type="range" id="zoomSlider" min="80" max="120" value="100" onchange="updateZoom()" style="width: 100%;">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>AI Provider</h3>
+                <label><input type="radio" name="provider" value="openai" checked> OpenAI (Default)</label>
+                <label><input type="radio" name="provider" value="gemini"> Google Gemini</label>
+            </div>
+
+            <div class="settings-section">
+                <h3>Models</h3>
+                <div class="form-group">
+                    <label>OpenAI Model</label>
+                    <select id="openaiModel">
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-4o" selected>GPT-4o</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>API Keys (Session Only)</h3>
+                <div class="form-group">
+                    <label>OpenAI Key</label>
+                    <input type="password" id="openaiKey" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label>Gemini Key</label>
+                    <input type="password" id="geminiKey" placeholder="AIzaSy-...">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Prompts</h3>
+                <div class="form-group">
+                    <label>Saved Prompts</label>
+                    <select id="promptList" onchange="loadPrompt()">
+                        <option value="">-- Create New --</option>
+                        <option value="default">Default</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="promptName" value="Default">
+                </div>
+                <div class="form-group">
+                    <label>Extract Prompt</label>
+                    <textarea id="extractPrompt">Optimize YouTube title. Remove special chars, improve clarity, max 60 chars. Return ONLY title.</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Policy Prompt</label>
+                    <textarea id="policyPrompt">Check if title complies with YouTube guidelines. Respond ONLY: "SAFE" or "WARNING: [reason]" or "DANGEROUS: [reason]"</textarea>
+                </div>
+                <div class="button-group">
+                    <button class="primary" onclick="savePrompt()">💾 Save</button>
+                    <button onclick="loadDefault()">↺ Default</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🔐 PASSWORD PROTECTION - Must enter before accessing app
+        function initializeApp() {
+            const correctPassword = 'chandan21';
+            const passwordEntered = localStorage.getItem('nts-password-verified');
+            
+            // Check if password was verified in this session
+            if (!passwordEntered) {
+                const attempts = sessionStorage.getItem('nts-password-attempts') || '0';
+                const attemptsNum = parseInt(attempts);
+                
+                if (attemptsNum >= 3) {
+                    alert('❌ Too many attempts. Please refresh page and try again.');
+                    return false;
+                }
+                
+                const userPassword = prompt('🔐 Enter password to access app:');
+                
+                if (userPassword === null) {
+                    // User cancelled
+                    document.body.innerHTML = '<div style="padding: 50px; text-align: center; font-family: sans-serif;"><h2>❌ Access Denied</h2><p>Password required to access this app.</p></div>';
+                    return false;
+                }
+                
+                if (userPassword !== correctPassword) {
+                    sessionStorage.setItem('nts-password-attempts', (attemptsNum + 1).toString());
+                    alert('❌ Incorrect password. Try again. (Attempts: ' + (attemptsNum + 1) + '/3)');
+                    location.reload();
+                    return false;
+                }
+                
+                // Password correct - mark as verified for this session
+                localStorage.setItem('nts-password-verified', 'true');
+                sessionStorage.setItem('nts-password-attempts', '0');
+            }
+            
+            return true;
+        }
+        
+        // Verify password before initializing app
+        if (!initializeApp()) {
+            throw new Error('App initialization blocked by password');
+        }
+
+        let data = { 
+            titles: [], 
+            finalList: [],
+            extractionData: [],
+            currentExtractionFilter: 'all',
+            results: [],
+            currentFilter: 'final',
+            selectedIndices: new Set(),
+            duplicates: new Set(),
+            fileName: '',
+            showDuplicates: false,
+            darkMode: localStorage.getItem('nts-dark-mode') === 'true',
+            rowHeight: parseInt(localStorage.getItem('nts-row-height')) || 8,
+            zoom: parseInt(localStorage.getItem('nts-zoom')) || 100
+        };
+
+        const filterCategories = {
+            'raw': { 
+                label: 'Raw List', 
+                filter: () => data.titles,
+                count: () => data.titles.length
+            },
+            'how-to': { 
+                label: 'How-To', 
+                filter: () => data.titles.filter(t => t.orig.toLowerCase().includes('how to')),
+                count: () => data.titles.filter(t => t.orig.toLowerCase().includes('how to')).length
+            },
+            'how-to-start': { 
+                label: 'How-To (Start)', 
+                filter: () => data.titles.filter(t => t.orig.toLowerCase().startsWith('how to')),
+                count: () => data.titles.filter(t => t.orig.toLowerCase().startsWith('how to')).length
+            },
+            'how-to-board': { 
+                label: 'How-To (Board)', 
+                filter: () => data.titles.filter(t => {
+                    const lower = t.orig.toLowerCase();
+                    return lower.includes('how to') && !lower.startsWith('how to');
+                }),
+                count: () => data.titles.filter(t => {
+                    const lower = t.orig.toLowerCase();
+                    return lower.includes('how to') && !lower.startsWith('how to');
+                }).length
+            },
+            'how-to-shorts': { 
+                label: 'How-To (Shorts)', 
+                filter: () => data.titles.filter(t => t.tag === 'Shorts'),
+                count: () => data.titles.filter(t => t.tag === 'Shorts').length
+            },
+            'non-how-to': { 
+                label: 'Non How-To', 
+                filter: () => data.titles.filter(t => !t.orig.toLowerCase().includes('how to')),
+                count: () => data.titles.filter(t => !t.orig.toLowerCase().includes('how to')).length
+            },
+            'final': { 
+                label: 'Final List', 
+                filter: () => data.finalList,
+                count: () => data.finalList.length
+            }
+        };
+
+        const tagOptions = [
+            'How to (Start)',
+            'How To (Board)',
+            'Shorts',
+            'Non How To',
+            'VS Comparison',
+            'Review',
+            'Listicles'
+        ];
+
+        // Initialize
+        if (data.darkMode) {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeBtn').textContent = '🌙';
+        }
+        document.body.style.zoom = data.zoom + '%';
+        document.getElementById('zoomSlider').value = data.zoom;
+        document.getElementById('zoomVal').textContent = data.zoom + '%';
+        document.getElementById('rowHeightSlider').value = data.rowHeight;
+        document.getElementById('rowHeightVal').textContent = data.rowHeight + 'px';
+
+        function updateRowHeight() {
+            data.rowHeight = parseInt(document.getElementById('rowHeightSlider').value);
+            localStorage.setItem('nts-row-height', data.rowHeight);
+            document.getElementById('rowHeightVal').textContent = data.rowHeight + 'px';
+            updatePreviewTable();
+        }
+
+        function updateZoom() {
+            data.zoom = parseInt(document.getElementById('zoomSlider').value);
+            localStorage.setItem('nts-zoom', data.zoom);
+            document.getElementById('zoomVal').textContent = data.zoom + '%';
+            document.body.style.zoom = data.zoom + '%';
+        }
+
+        function toggleDarkMode() {
+            data.darkMode = !data.darkMode;
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('nts-dark-mode', data.darkMode);
+            document.getElementById('themeBtn').textContent = data.darkMode ? '🌙' : '☀️';
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        function switchStep(n) {
+            document.querySelectorAll('.step-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.step-item').forEach(e => e.classList.remove('active'));
+            document.getElementById('c' + n).classList.add('active');
+            document.querySelectorAll('.step-item')[n].classList.add('active');
+        }
+
+        function getTag(title) {
+            const t = title.toLowerCase();
+            if (t.includes('vs') || t.includes('versus')) return 'VS Comparison';
+            if (t.includes('review')) return 'Review';
+            if (t.includes('best') || t.includes('top') || t.includes('list')) return 'Listicles';
+            if (t.includes('shorts') || t.includes('quick') || t.includes('60 second')) return 'Shorts';
+            if (t.includes('how to')) {
+                if (t.startsWith('how to')) return 'How to (Start)';
+                return 'How To (Board)';
+            }
+            return 'Non How To';
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            data.fileName = file.name;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const lines = ev.target.result.split('\n').filter(l => l.trim());
+                    data.titles = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const match = lines[i].match(/"([^"]*)"|([^,]*)/);
+                        const title = match ? (match[1] || match[2]).trim() : lines[i];
+                        if (title) data.titles.push({ orig: title, tag: getTag(title) });
+                    }
+                    document.getElementById('uploadSection').style.display = 'none';
+                    document.getElementById('previewSection').style.display = 'block';
+                    document.getElementById('fileNameDisplay').textContent = `📄 ${file.name} (${data.titles.length})`;
+                    data.finalList = [...data.titles.filter(t => t.tag === 'How to (Start)')];
+                    data.currentFilter = 'final';
+                    document.getElementById('processBtn').disabled = false;
+                    document.getElementById('s1').textContent = 'Ready';
+                    data.showDuplicates = false;
+                    showPreview();
+                    msg('✓ File uploaded!', 'success');
+                } catch (err) {
+                    msg('✗ Error parsing file', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function handleManualInput() {
+            const text = document.getElementById('manualTitles').value.trim();
+            if (!text) { msg('✗ Enter titles', 'error'); return; }
+            data.titles = text.split('\n').filter(t => t.trim()).map(t => ({ orig: t.trim(), tag: getTag(t) }));
+            data.fileName = 'Pasted Titles';
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('previewSection').style.display = 'block';
+            document.getElementById('fileNameDisplay').textContent = `📝 Pasted Titles (${data.titles.length})`;
+            data.finalList = [...data.titles.filter(t => t.tag === 'How to (Start)')];
+            data.currentFilter = 'final';
+            document.getElementById('processBtn').disabled = false;
+            document.getElementById('s1').textContent = 'Ready';
+            data.showDuplicates = false;
+            showPreview();
+            msg(`✓ Added ${data.titles.length} titles!`, 'success');
+        }
+
+        function showPreview() {
+            data.selectedIndices.clear();
+            document.getElementById('selectAllCheckbox').checked = false;
+            buildFilterButtons();
+            buildFilterMenu();
+            updatePreviewTable();
+            document.getElementById('sendExtractBtn').style.display = data.currentFilter === 'final' ? 'block' : 'none';
+        }
+
+        function buildFilterButtons() {
+            let html = '';
+            Object.entries(filterCategories).forEach(([key, cat]) => {
+                const count = cat.count();
+                const active = data.currentFilter === key ? 'active' : '';
+                html += `<button class="filter-btn ${active}" onclick="filterPreview('${key}')">${cat.label} (${count})</button>`;
+            });
+            document.getElementById('filterButtons').innerHTML = html;
+        }
+
+        function buildFilterMenu() {
+            let html = `<button onclick="checkDuplicatesOnly()">Check Duplicates (${data.duplicates.size})</button>`;
+            document.getElementById('filterMenuContent').innerHTML = html;
+        }
+
+        function toggleFilterMenu() {
+            document.getElementById('filterMenuContent').classList.toggle('active');
+        }
+
+        function filterPreview(type) {
+            data.currentFilter = type;
+            data.selectedIndices.clear();
+            data.showDuplicates = false;
+            document.getElementById('selectAllCheckbox').checked = false;
+            buildFilterButtons();
+            updatePreviewTable();
+            document.getElementById('sendExtractBtn').style.display = type === 'final' ? 'block' : 'none';
+        }
+
+        function updatePreviewTable() {
+            let filtered = filterCategories[data.currentFilter].filter();
+            
+            if (data.showDuplicates && data.currentFilter === 'raw') {
+                filtered = filtered.filter(t => data.duplicates.has(t.orig));
+            }
+
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const results = searchTerm 
+                ? filtered.filter(t => t.orig.toLowerCase().includes(searchTerm))
+                : filtered;
+
+            let html = `
+                <thead>
+                    <tr>
+                        <th style="width:5%;"><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAll()"></th>
+                        <th style="width:55%;">Title</th>
+                        <th style="width:20%;">Tag</th>
+                        <th style="width:20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+            results.slice(0, 100).forEach((t, i) => {
+                const cls = t.tag.toLowerCase().replace(/\s+/g, '-').replace(/[()]/g, '');
+                const dataIdx = data.titles.indexOf(t);
+                const checked = data.selectedIndices.has(dataIdx) ? 'checked' : '';
+                const isDuplicate = data.duplicates.has(t.orig) ? 'duplicate' : '';
+                html += `
+                    <tr class="${isDuplicate}" style="height: ${data.rowHeight}px;">
+                        <td><input type="checkbox" class="row-checkbox" data-idx="${dataIdx}" onchange="updateSelected()" ${checked}></td>
+                        <td>${t.orig}</td>
+                        <td><span class="badge ${cls}">${t.tag}</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button onclick="editTitle(${dataIdx})">✏️</button>
+                                <button onclick="overrideTag(${dataIdx})">Tag</button>
+                                <button onclick="moveToFinal(${dataIdx})">Final</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody>';
+            document.getElementById('previewTable').innerHTML = html;
+            document.getElementById('totalCount').textContent = data.titles.length;
+            document.getElementById('finalListCount').textContent = data.finalList.length;
+            document.getElementById('countInfo').innerHTML = `Showing ${Math.min(results.length, 100)} of ${results.length}`;
+        }
+
+        function toggleSelectAll() {
+            const isChecked = document.getElementById('selectAllCheckbox').checked;
+            
+            if (isChecked) {
+                document.querySelectorAll('.row-checkbox').forEach(cb => {
+                    const idx = parseInt(cb.dataset.idx);
+                    if (idx >= 0) {
+                        cb.checked = true;
+                        data.selectedIndices.add(idx);
+                    }
+                });
+            } else {
+                document.querySelectorAll('.row-checkbox').forEach(cb => {
+                    cb.checked = false;
+                });
+                data.selectedIndices.clear();
+            }
+            
+            updatePreviewTable();
+        }
+
+        function updateSelected() {
+            data.selectedIndices.clear();
+            document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
+                const idx = parseInt(cb.dataset.idx);
+                if (idx >= 0) data.selectedIndices.add(idx);
+            });
+            
+            const allChecked = document.querySelectorAll('.row-checkbox').length > 0 &&
+                               document.querySelectorAll('.row-checkbox').length === document.querySelectorAll('.row-checkbox:checked').length;
+            document.getElementById('selectAllCheckbox').checked = allChecked;
+            
+            updatePreviewTable();
+        }
+
+        function editTitle(idx) {
+            const newTitle = prompt('Edit title:', data.titles[idx].orig);
+            if (newTitle && newTitle.trim()) {
+                data.titles[idx].orig = newTitle.trim();
+                const finalIdx = data.finalList.findIndex(t => t === data.titles[idx]);
+                if (finalIdx >= 0) {
+                    data.finalList[finalIdx] = data.titles[idx];
+                }
+                msg('✓ Title updated!', 'success');
+                updatePreviewTable();
+            }
+        }
+
+        function overrideTag(idx) {
+            const menu = document.createElement('div');
+            menu.className = 'tag-dropdown';
+            menu.style.position = 'fixed';
+            menu.style.zIndex = '300';
+            
+            tagOptions.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.textContent = tag;
+                btn.onclick = () => {
+                    data.titles[idx].tag = tag;
+                    const finalIdx = data.finalList.findIndex(t => t === data.titles[idx]);
+                    if (finalIdx >= 0) {
+                        data.finalList[finalIdx] = data.titles[idx];
+                    }
+                    msg(`✓ Tag changed to ${tag}!`, 'success');
+                    menu.remove();
+                    updatePreviewTable();
+                };
+                menu.appendChild(btn);
+            });
+
+            document.body.appendChild(menu);
+            setTimeout(() => {
+                document.addEventListener('click', () => { if (menu.parentNode) menu.remove(); }, { once: true });
+            }, 0);
+        }
+
+        function moveToFinal(idx) {
+            const title = data.titles[idx];
+            const exists = data.finalList.some(t => t === title);
+            if (!exists) {
+                data.finalList.push(title);
+                msg('✓ Added to Final List!', 'success');
+            } else {
+                data.finalList = data.finalList.filter(t => t !== title);
+                msg('✓ Removed from Final List!', 'success');
+            }
+            buildFilterButtons();
+            updatePreviewTable();
+        }
+
+        function checkDuplicatesOnly() {
+            if (data.currentFilter !== 'raw') {
+                msg('✗ Duplicates only work on Raw List', 'error');
+                return;
+            }
+            const titles = data.titles.map(t => t.orig);
+            const seen = new Set();
+            data.duplicates.clear();
+            
+            titles.forEach(title => {
+                if (seen.has(title)) {
+                    data.duplicates.add(title);
+                } else {
+                    seen.add(title);
+                }
+            });
+
+            data.showDuplicates = true;
+            msg(`✓ Found ${data.duplicates.size} duplicates`, 'success');
+            buildFilterMenu();
+            updatePreviewTable();
+            document.getElementById('filterMenuContent').classList.remove('active');
+        }
+
+        function searchTitles() {
+            updatePreviewTable();
+        }
+
+        function sendToExtract() {
+            if (data.finalList.length === 0) {
+                msg('✗ Add titles to Final List', 'error');
+                return;
+            }
+            
+            data.extractionData = data.finalList.map(t => ({
+                orig: t.orig,
+                extracted: '',
+                status: 'PENDING',
+                decision: '',
+                reason: ''
+            }));
+
+            let html = `<div class="table-wrapper"><table><thead><tr style="position:sticky;top:0;background:#f8f9fa;z-index:10;user-select:none;">
+                <th style="width:20%;cursor:col-resize;">📌 Input Title</th>
+                <th style="width:22%;cursor:col-resize;">✏️ Title Extraction</th>
+                <th style="width:10%;cursor:col-resize;">🔄 Regenerate</th>
+                <th style="width:16%;cursor:col-resize;">📊 Difference</th>
+                <th style="width:10%;cursor:col-resize;">✔️ Status</th>
+                <th style="width:10%;cursor:col-resize;">✅ Decision</th>
+                <th style="width:12%;cursor:col-resize;">💬 Reason</th>
+            </tr></thead><tbody id="extractTableBody">`;
+            
+            data.extractionData.forEach((item, idx) => {
+                const diff = calculateDifference(item.orig, item.extracted);
+                html += `<tr data-idx="${idx}" data-status="pending" style="border-left:3px solid #ddd;transition:border 0.2s;">
+                    <td style="max-width:180px;word-break:break-word;padding:8px;font-size:11px;" title="${item.orig}">${item.orig}</td>
+                    <td style="max-width:160px;"><input type="text" class="extract-title" data-idx="${idx}" value="${item.extracted}" placeholder="(waiting...)" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:11px;" onchange="updateExtracted(${idx})"></td>
+                    <td style="text-align:center;"><button onclick="regenerateTitle(${idx})" style="padding:4px 8px;font-size:11px;background:#e3f2fd;border:1px solid #bbdefb;color:#2196f3;border-radius:4px;cursor:pointer;">🔄</button></td>
+                    <td style="max-width:140px;font-size:10px;color:#666;"><span class="diff-text" style="font-size:10px;">${diff}</span></td>
+                    <td style="text-align:center;"><span style="display:inline-block;padding:4px 8px;border-radius:3px;font-size:10px;font-weight:600;background:#f0f0f0;color:#666;" class="status-badge">${item.status}</span></td>
+                    <td><select class="extract-decision" data-idx="${idx}" onchange="updateDecision(${idx})" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:10px;">
+                        <option value="">-</option><option value="DO">DO</option><option value="REWRITE">REWRITE</option><option value="AVOID">AVOID</option>
+                    </select></td>
+                    <td><input type="text" class="extract-reason" data-idx="${idx}" placeholder="reason..." style="width:100%;padding:4px;border:1px solid #ddd;border-radius:3px;font-size:10px;" onchange="updateReason(${idx})"></td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table></div>`;
+            document.getElementById('processContent').innerHTML = html;
+            data.currentExtractionFilter = 'all';
+            switchStep(1);
+            msg(`✓ ${data.finalList.length} titles ready! Click "Start Title extraction & Policy Checker"`, 'success');
+        }
+
+        function calculateDifference(orig, extracted) {
+            if (orig === extracted) return '✓ No change';
+            const origWords = new Set(orig.toLowerCase().split(/\s+/));
+            const extractedWords = new Set(extracted.toLowerCase().split(/\s+/));
+            const removed = Array.from(origWords).filter(w => !extractedWords.has(w));
+            return removed.length > 0 ? `Removed ${removed.length} word(s)` : '✓ No change';
+        }
+
+        function updateExtracted(idx) {
+            const newVal = document.querySelector(`.extract-title[data-idx="${idx}"]`).value;
+            data.extractionData[idx].extracted = newVal;
+            const diffSpan = document.querySelector(`tr[data-idx="${idx}"] .diff-text`);
+            if (diffSpan) diffSpan.textContent = calculateDifference(data.extractionData[idx].orig, newVal);
+        }
+
+        function regenerateTitle(idx) {
+            const provider = document.querySelector('input[name="provider"]:checked').value;
+            const key = provider === 'openai' ? document.getElementById('openaiKey').value : document.getElementById('geminiKey').value;
+            if (!key) { msg('✗ Enter API key', 'error'); return; }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳';
+            const extractPrompt = document.getElementById('extractPrompt').value;
+            
+            callOAI(key, extractPrompt, data.extractionData[idx].orig).then(result => {
+                data.extractionData[idx].extracted = result;
+                document.querySelector(`.extract-title[data-idx="${idx}"]`).value = result;
+                const diffSpan = document.querySelector(`tr[data-idx="${idx}"] .diff-text`);
+                if (diffSpan) diffSpan.textContent = calculateDifference(data.extractionData[idx].orig, result);
+                btn.disabled = false;
+                btn.textContent = '🔄';
+                msg('✓ Regenerated!', 'success');
+            }).catch(err => {
+                btn.disabled = false;
+                btn.textContent = '🔄';
+                msg('✗ Failed', 'error');
+            });
+        }
+
+        function updateDecision(idx) {
+            data.extractionData[idx].decision = document.querySelector(`.extract-decision[data-idx="${idx}"]`).value;
+        }
+
+        function updateReason(idx) {
+            data.extractionData[idx].reason = document.querySelector(`.extract-reason[data-idx="${idx}"]`).value;
+        }
+
+        function filterExtraction(type) {
+            data.currentExtractionFilter = type;
+            document.querySelectorAll('.stat-card').forEach(c => c.style.borderColor = '#ddd');
+            if (type === 'all') document.getElementById('statTotalCard').style.borderColor = '#2196f3';
+            else if (type === 'safe') document.getElementById('statSafeCard').style.borderColor = '#4caf50';
+            else if (type === 'risky') document.getElementById('statRiskyCard').style.borderColor = '#ff9800';
+            else if (type === 'prohibited') document.getElementById('statProhibitedCard').style.borderColor = '#f44336';
+            
+            document.querySelectorAll('#extractTableBody tr').forEach(row => {
+                const status = row.dataset.status;
+                let show = (type === 'all') || (type === status);
+                row.style.display = show ? '' : 'none';
+                if (status === 'safe') row.style.borderLeftColor = '#4caf50';
+                else if (status === 'risky') row.style.borderLeftColor = '#ff9800';
+                else if (status === 'prohibited') row.style.borderLeftColor = '#f44336';
+            });
+        }
+
+        async function startProcessing() {
+            if (!data.extractionData || data.extractionData.length === 0) { 
+                msg('✗ No titles to process', 'error'); 
+                return; 
+            }
+            
+            const provider = document.querySelector('input[name="provider"]:checked').value;
+            const key = provider === 'openai' ? document.getElementById('openaiKey').value : document.getElementById('geminiKey').value;
+            if (!key) { msg('✗ Enter API key in Settings', 'error'); return; }
+            
+            document.getElementById('processBtn').disabled = true;
+            document.getElementById('s1').textContent = 'Processing...';
+            const extractPrompt = document.getElementById('extractPrompt').value;
+            const policyPrompt = document.getElementById('policyPrompt').value;
+
+            for (let i = 0; i < data.extractionData.length; i++) {
+                const item = data.extractionData[i];
+                let ext = item.orig;
+                let pol = 'SAFE';
+                
+                try {
+                    if (provider === 'openai') {
+                        ext = await callOAI(key, extractPrompt, item.orig);
+                        const res = await callOAI(key, policyPrompt, ext);
+                        if (res.includes('PROHIBITED')) {
+                            pol = 'PROHIBITED';
+                        } else if (res.includes('WARNING') || res.includes('RISKY')) {
+                            pol = 'RISKY';
+                        }
+                    }
+                } catch (err) { 
+                    console.error(err);
+                    pol = 'ERROR';
+                }
+                
+                item.extracted = ext;
+                item.status = pol;
+                
+                // Auto-assign decision based on status
+                if (pol === 'SAFE') {
+                    item.decision = 'DO';
+                } else if (pol === 'RISKY') {
+                    item.decision = 'REWRITE';
+                } else if (pol === 'PROHIBITED') {
+                    item.decision = 'AVOID';
+                }
+                
+                // Update UI
+                const row = document.querySelector(`tr[data-idx="${i}"]`);
+                if (row) {
+                    const extractInput = row.querySelector('.extract-title');
+                    const decisionSelect = row.querySelector('.extract-decision');
+                    const statusBadge = row.querySelector('.status-badge');
+                    const diffSpan = row.querySelector('.diff-text');
+                    
+                    const statusColor = pol === 'SAFE' ? '#4caf50' : pol === 'RISKY' ? '#ff9800' : pol === 'PROHIBITED' ? '#f44336' : '#999';
+                    const statusBg = pol === 'SAFE' ? '#e8f5e9' : pol === 'RISKY' ? '#fff3e0' : pol === 'PROHIBITED' ? '#ffebee' : '#f5f5f5';
+                    
+                    if (extractInput) extractInput.value = ext;
+                    if (decisionSelect) decisionSelect.value = item.decision;
+                    if (statusBadge) {
+                        statusBadge.textContent = pol;
+                        statusBadge.style.color = statusColor;
+                        statusBadge.style.background = statusBg;
+                    }
+                    if (diffSpan) diffSpan.textContent = calculateDifference(item.orig, ext);
+                    
+                    row.dataset.status = pol.toLowerCase();
+                    if (pol === 'SAFE') row.style.borderLeftColor = '#4caf50';
+                    else if (pol === 'RISKY') row.style.borderLeftColor = '#ff9800';
+                    else if (pol === 'PROHIBITED') row.style.borderLeftColor = '#f44336';
+                }
+                
+                updateStats();
+            }
+            
+            document.getElementById('s1').textContent = 'Completed';
+            document.getElementById('s2').textContent = 'Ready';
+            document.getElementById('processBtn').disabled = false;
+            
+            showExportOptions();
+            switchStep(2);
+            
+            msg(`✓ Processed ${data.extractionData.length}!`, 'success');
+        }
+
+        function updateStats() {
+            const total = data.extractionData.length;
+            const safe = data.extractionData.filter(item => item.status === 'SAFE').length;
+            const risky = data.extractionData.filter(item => item.status === 'RISKY').length;
+            const prohibited = data.extractionData.filter(item => item.status === 'PROHIBITED').length;
+            
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statSafe').textContent = safe;
+            document.getElementById('statRisky').textContent = risky;
+            document.getElementById('statProhibited').textContent = prohibited;
+        }
+
+        function downloadMasterSheet() {
+            if (!data.extractionData || data.extractionData.length === 0) {
+                msg('✗ No data to download', 'error');
+                return;
+            }
+
+            let csv = 'Input Title,Title Extraction,Status,Decision,Reason\n';
+            data.extractionData.forEach(item => {
+                csv += `"${item.orig.replace(/"/g, '""')}","${item.extracted.replace(/"/g, '""')}","${item.status}","${item.decision}","${item.reason.replace(/"/g, '""')}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `master-sheet-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            msg(`✓ Downloaded master sheet!`, 'success');
+        }
+
+        function exportReadyTitles() {
+            const safeTitles = data.extractionData.filter(item => item.status === 'SAFE' && item.decision === 'DO');
+            
+            if (safeTitles.length === 0) {
+                msg('✗ No SAFE titles to export', 'error');
+                return;
+            }
+
+            let csv = 'Title\n';
+            safeTitles.forEach(item => {
+                csv += `"${item.extracted.replace(/"/g, '""')}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ready-to-scrape-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            msg(`✓ Downloaded ${safeTitles.length} SAFE titles!`, 'success');
+        }
+
+        async function callOAI(key, prompt, title) {
+            const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+                body: JSON.stringify({ model: document.getElementById('openaiModel').value, messages: [{ role: 'user', content: `${prompt}\n\nTitle: "${title}"` }], max_tokens: 100, temperature: 0.7 })
+            });
+            if (!res.ok) throw new Error('API error');
+            const d = await res.json();
+            return d.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
+        }
+
+        function showExportOptions() {
+            const safe = data.extractionData.filter(item => item.status === 'SAFE' && item.decision === 'DO').length;
+            const rewrite = data.extractionData.filter(item => item.status === 'RISKY' && item.decision === 'REWRITE').length;
+            const avoid = data.extractionData.filter(item => item.status === 'PROHIBITED' && item.decision === 'AVOID').length;
+            
+            let html = `
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+                    <div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:6px;padding:16px;text-align:center;">
+                        <div style="font-size:12px;color:#2e7d32;text-transform:uppercase;margin-bottom:8px;font-weight:600;">Ready to Scrape</div>
+                        <div style="font-size:24px;font-weight:700;color:#4caf50;">${safe}</div>
+                        <div style="display:flex;gap:8px;margin-top:12px;">
+                            <button class="primary" onclick="exportReadyTitles()" style="flex:1;padding:8px;">📥 Download</button>
+                            <button onclick="copyReadyTitles()" style="flex:1;padding:8px;background:#c8e6c9;border-color:#81c784;color:#2e7d32;">📋 Copy</button>
+                        </div>
+                    </div>
+                    <div style="background:#fff3e0;border:1px solid #ffe0b2;border-radius:6px;padding:16px;text-align:center;">
+                        <div style="font-size:12px;color:#e65100;text-transform:uppercase;margin-bottom:8px;font-weight:600;">Need Rewrite</div>
+                        <div style="font-size:24px;font-weight:700;color:#ff9800;">${rewrite}</div>
+                        <p style="font-size:11px;color:#999;margin-top:8px;">Review & edit these titles</p>
+                    </div>
+                    <div style="background:#ffebee;border:1px solid #ffccbc;border-radius:6px;padding:16px;text-align:center;">
+                        <div style="font-size:12px;color:#bf360c;text-transform:uppercase;margin-bottom:8px;font-weight:600;">To Avoid</div>
+                        <div style="font-size:24px;font-weight:700;color:#f44336;">${avoid}</div>
+                        <p style="font-size:11px;color:#999;margin-top:8px;">Not recommended for use</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top:20px;padding:16px;background:#f5f5f5;border-radius:6px;border-left:4px solid #2196f3;">
+                    <p style="font-size:12px;margin:0;"><strong>📊 Master Sheet:</strong> Download complete data with all decisions and reasons</p>
+                    <button onclick="downloadMasterSheet()" style="margin-top:12px;">📥 Download Master Sheet</button>
+                </div>
+            `;
+            
+            document.getElementById('exportContent').innerHTML = html;
+        }
+
+        function exportReadyTitles() {
+            const safeTitles = data.extractionData.filter(item => item.status === 'SAFE' && item.decision === 'DO');
+            
+            if (safeTitles.length === 0) {
+                msg('✗ No SAFE titles to export', 'error');
+                return;
+            }
+
+            let csv = 'Title\n';
+            safeTitles.forEach(item => {
+                csv += `"${item.extracted.replace(/"/g, '""')}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ready-to-scrape-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            msg(`✓ Downloaded ${safeTitles.length} SAFE titles!`, 'success');
+        }
+
+        function copyReadyTitles() {
+            const safeTitles = data.extractionData.filter(item => item.status === 'SAFE' && item.decision === 'DO');
+            if (safeTitles.length === 0) {
+                msg('✗ No SAFE titles to copy', 'error');
+                return;
+            }
+            const text = safeTitles.map(item => item.extracted).join('\n');
+            navigator.clipboard.writeText(text).then(() => msg(`✓ Copied ${safeTitles.length} titles!`, 'success'));
+        }
+
+        function exportCSV(filter) {
+            let d = data.results;
+            if (filter === 'safe') d = d.filter(r => r.pol === 'SAFE');
+            else if (filter === 'warn') d = d.filter(r => r.pol === 'WARNING');
+            
+            let csv = 'Original,Final,Tag,Policy\n';
+            d.forEach(r => {
+                const f = r.edit || r.ext;
+                csv += `"${r.orig.replace(/"/g, '""')}","${f.replace(/"/g, '""')}","${r.tag}","${r.pol}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `niche-${filter}-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            msg(`✓ Downloaded ${d.length}!`, 'success');
+        }
+
+        function copyClip() {
+            const text = data.results.filter(r => r.pol === 'SAFE').map(r => r.edit || r.ext).join('\n');
+            navigator.clipboard.writeText(text).then(() => msg('✓ Copied!', 'success'));
+        }
+
+        function openSettings() {
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('settings').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('settings').classList.remove('active');
+        }
+
+        function savePrompt() {
+            const name = document.getElementById('promptName').value;
+            if (!name) { msg('✗ Name required', 'error'); return; }
+            localStorage.setItem('nts-' + name, JSON.stringify({
+                ext: document.getElementById('extractPrompt').value,
+                pol: document.getElementById('policyPrompt').value
+            }));
+            loadPromptList();
+            msg(`✓ Saved: ${name}`, 'success');
+        }
+
+        function loadPrompt() {
+            const name = document.getElementById('promptList').value;
+            if (!name) return;
+            if (name === 'default') { loadDefault(); return; }
+            const p = JSON.parse(localStorage.getItem('nts-' + name));
+            document.getElementById('promptName').value = name;
+            document.getElementById('extractPrompt').value = p.ext;
+            document.getElementById('policyPrompt').value = p.pol;
+        }
+
+        function loadDefault() {
+            document.getElementById('promptName').value = 'Default';
+            document.getElementById('extractPrompt').value = 'Optimize YouTube title. Remove special chars, improve clarity, max 60 chars. Return ONLY title.';
+            document.getElementById('policyPrompt').value = 'Check if title complies with YouTube guidelines. Respond ONLY: "SAFE" or "WARNING: [reason]" or "DANGEROUS: [reason]"';
+        }
+
+        function loadPromptList() {
+            const list = document.getElementById('promptList');
+            const prompts = Object.keys(localStorage).filter(k => k.startsWith('nts-')).map(k => k.replace('nts-', ''));
+            list.innerHTML = '<option value="">-- Create New --</option><option value="default">Default</option>';
+            prompts.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.text = p;
+                list.appendChild(opt);
+            });
+        }
+
+        function msg(text, type) {
+            const div = document.createElement('div');
+            div.className = `status-message ${type}`;
+            div.textContent = text;
+            document.querySelector('.content-area').insertAdjacentElement('afterbegin', div);
+            setTimeout(() => div.remove(), 4000);
+        }
+
+        // 💾 API KEY LOCALSTORAGE FUNCTIONS
+        function saveApiKeysToStorage() {
+            const openaiKey = document.getElementById('openaiKey').value;
+            const geminiKey = document.getElementById('geminiKey').value;
+            
+            if (openaiKey) localStorage.setItem('nts-openai-key', openaiKey);
+            if (geminiKey) localStorage.setItem('nts-gemini-key', geminiKey);
+        }
+
+        function loadApiKeysFromStorage() {
+            const savedOpenaiKey = localStorage.getItem('nts-openai-key');
+            const savedGeminiKey = localStorage.getItem('nts-gemini-key');
+            
+            if (savedOpenaiKey) {
+                document.getElementById('openaiKey').value = savedOpenaiKey;
+            }
+            if (savedGeminiKey) {
+                document.getElementById('geminiKey').value = savedGeminiKey;
+            }
+        }
+
+        // Add event listeners to save API keys when they change
+        document.addEventListener('DOMContentLoaded', function() {
+            loadApiKeysFromStorage();
+            
+            const openaiKeyInput = document.getElementById('openaiKey');
+            const geminiKeyInput = document.getElementById('geminiKey');
+            
+            if (openaiKeyInput) {
+                openaiKeyInput.addEventListener('change', saveApiKeysToStorage);
+                openaiKeyInput.addEventListener('blur', saveApiKeysToStorage);
+            }
+            if (geminiKeyInput) {
+                geminiKeyInput.addEventListener('change', saveApiKeysToStorage);
+                geminiKeyInput.addEventListener('blur', saveApiKeysToStorage);
+            }
+        });
+
+        loadDefault();
+        loadPromptList();
+    </script>
+</body>
+</html>
